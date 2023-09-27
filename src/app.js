@@ -2,9 +2,13 @@ const express = require("express");
 const app = express();
 const morgan = require("morgan");
 
-const logging = (req, res, next) => {
-  console.log("A request is being made!");
-  next();
+const checkForAbbreviationLength = (req, res, next) => {
+  const abbreviation = req.params.abbreviation;
+  if (abbreviation.length !== 2) {
+    next("State abbreviation is invalid.");
+  } else {
+    next();
+  }
 };
 
 // app.use(logging);
@@ -20,19 +24,27 @@ app.get("/hello", (req, res) => {
 app.get("/say/:greeting", (req, res) => {
   const greeting = req.params.greeting;
   const name = req.query.name;
-
   const content = greeting && name ? `${greeting}, ${name}!` : `${greeting}!`;
   res.send(content);
 });
 
-app.get("/states/:abbreviation", (req, res, next) => {
-  const abbreviation = req.params.abbreviation;
-  if (abbreviation.length !== 2) {
-    next("State abbreviation is invalid.");
-  } else {
+app.get(
+  "/states/:abbreviation",
+  checkForAbbreviationLength,
+  (req, res, next) => {
+    const abbreviation = req.params.abbreviation;
     res.send(`${abbreviation} is a nice state, I'd like to visit.`);
   }
-});
+);
+
+app.get(
+  "/travel/:abbreviation",
+  checkForAbbreviationLength,
+  (req, res, next) => {
+    const abbreviation = req.params.abbreviation;
+    res.send(`Enjoy your trip to ${abbreviation}!`);
+  }
+);
 
 // Not-found handler
 app.use((req, res, next) => {
